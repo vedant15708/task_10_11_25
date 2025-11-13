@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 import '../../../../core/utils/colors.dart';
 import '../data/models/address_model.dart';
 import '../widgets/address_text_field.dart';
+import 'package:flutter/services.dart';
 
 class AddNewAddressScreen extends StatefulWidget {
   const AddNewAddressScreen({Key? key}) : super(key: key);
@@ -16,7 +17,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
   final _formKey = GlobalKey<FormState>();
   late Box<AddressModel> addressBox;
 
-  // Controllers for each text field
   final _addressController = TextEditingController();
   final _unitController = TextEditingController();
   final _cityController = TextEditingController();
@@ -32,7 +32,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
 
   @override
   void dispose() {
-    // Clean up controllers
     _addressController.dispose();
     _unitController.dispose();
     _cityController.dispose();
@@ -43,25 +42,18 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
   }
 
   void _onSaveAddress() {
-    // 1. Validate the form
     if (_formKey.currentState?.validate() ?? false) {
-      // 2. Create the new AddressModel
       final newAddress = AddressModel(
         fullAddress: _addressController.text,
         city: _cityController.text,
         state: _stateController.text,
         zipCode: _zipcodeController.text,
-        country: "Us", // Hardcoding this as it's not in the form
+        country: "Us",
         unitNumber: _unitController.text,
         deliveryInstruction: _instructionController.text,
-        // If this is the first address, make it the default
         isDefault: addressBox.isEmpty,
       );
-
-      // 3. Add to Hive
       addressBox.add(newAddress);
-
-      // 4. Go back to the previous screen
       Navigator.pop(context);
     }
   }
@@ -93,6 +85,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           padding: EdgeInsets.all(16.w),
           child: Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               children: [
                 AddressTextField(
@@ -110,7 +103,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                 AddressTextField(
                   controller: _cityController,
                   hintText: "City",
-                  // --- FIX ---
                   validator: (value) => (value == null || value.isEmpty)
                       ? "City is required"
                       : null,
@@ -118,7 +110,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                 AddressTextField(
                   controller: _stateController,
                   hintText: "State",
-                  // --- FIX ---
                   validator: (value) => (value == null || value.isEmpty)
                       ? "State is required"
                       : null,
@@ -126,11 +117,20 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                 AddressTextField(
                   controller: _zipcodeController,
                   hintText: "Zipcode",
-                  keyboardType: TextInputType.number,
-                  // --- FIX ---
-                  validator: (value) => (value == null || value.isEmpty)
-                      ? "Zipcode is required"
-                      : null,
+                  keyboardType: TextInputType.text,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Zipcode is required";
+                    }
+                    final zipCodePattern = RegExp(r'^\d{5}(?:-\d{4})?$');
+                    if (!zipCodePattern.hasMatch(value)) {
+                      return "Enter a valid US zipcode (e.g., 12345 or 12345-6789)";
+                    }
+                    return null;
+                  },
                 ),
                 AddressTextField(
                   keyboardType: TextInputType.multiline,
@@ -140,7 +140,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                   hintText: "Delivery Instruction",
                 ),
                 SizedBox(height: 24.h),
-                // "Add" Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

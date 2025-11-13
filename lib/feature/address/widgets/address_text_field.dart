@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/utils/colors.dart';
+import 'package:flutter/services.dart';
 
 class AddressTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -10,6 +11,7 @@ class AddressTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final int maxLines; // <-- ADD THIS
   final int minLines; // <-- ADD THIS
+  final List<TextInputFormatter>? inputFormatters;
 
   const AddressTextField({
     Key? key,
@@ -19,7 +21,8 @@ class AddressTextField extends StatelessWidget {
     this.validator,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1, // <-- ADD DEFAULT
-    this.minLines = 1, // <-- ADD DEFAULT
+    this.minLines = 1,
+    this.inputFormatters,
   }) : super(key: key);
 
   @override
@@ -32,6 +35,7 @@ class AddressTextField extends StatelessWidget {
         validator: validator,
         maxLines: maxLines, // <-- PASS IT HERE
         minLines: minLines, // <-- PASS IT HERE
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey),
@@ -59,3 +63,4 @@ class AddressTextField extends StatelessWidget {
     );
   }
 }
+
